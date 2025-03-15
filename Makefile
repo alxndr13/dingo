@@ -5,4 +5,4 @@ build:
 	go build -o bin/dingo
 
 run:
-	go run .
+	go run . --logmode human
