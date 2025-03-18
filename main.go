@@ -85,6 +85,14 @@ func main() {
 			logger.Info("data loaded and validated successfully",
 				zap.Any("data", mergedData),
 			)
+
+      if err := templateFiles("./templates", "./output", mergedData); err != nil {
+				logger.Error("templating failed",
+					zap.Error(err),
+					zap.Any("data", mergedData),
+				)
+				os.Exit(1)
+      }
 		},
 	}
 
