@@ -65,8 +65,6 @@ type Decryptor interface {
 type ExampleDecryptor struct{}
 
 func (d *ExampleDecryptor) Decrypt(secretName string) (string, error) {
-	// Implement your decryption logic here
-	// For example, you might look up the secret in a secure store
 	// Here, we'll just return a dummy value for demonstration
 	return "decryptedValue", nil
 }
@@ -89,14 +87,14 @@ func decryptSecrets(data *Data, decryptor Decryptor) error {
 				newStr = strings.ReplaceAll(newStr, match[0], decryptedValue)
 			}
 			(*data)[k] = newStr
-		case map[string]interface{}:
+		case map[string]any:
 			// Recursively process nested maps.
 			nestedData := Data(value)
 			if err := decryptSecrets(&nestedData, decryptor); err != nil {
 				return err
 			}
 			(*data)[k] = nestedData
-		case []interface{}:
+		case []any:
 			// Process slices using a helper function.
 			newList, err := decryptSecretsInSlice(value, decryptor)
 			if err != nil {
@@ -109,7 +107,7 @@ func decryptSecrets(data *Data, decryptor Decryptor) error {
 }
 
 // decryptSecretsInSlice recursively processes entries in a slice.
-func decryptSecretsInSlice(list []interface{}, decryptor Decryptor) ([]interface{}, error) {
+func decryptSecretsInSlice(list []any, decryptor Decryptor) ([]any, error) {
 	secretPattern := regexp.MustCompile(`\$\$(.*?)\$\$`)
 	for i, v := range list {
 		switch value := v.(type) {
@@ -125,13 +123,13 @@ func decryptSecretsInSlice(list []interface{}, decryptor Decryptor) ([]interface
 				newStr = strings.ReplaceAll(newStr, match[0], decryptedValue)
 			}
 			list[i] = newStr
-		case map[string]interface{}:
+		case map[string]any:
 			nestedData := Data(value)
 			if err := decryptSecrets(&nestedData, decryptor); err != nil {
 				return nil, err
 			}
 			list[i] = nestedData
-		case []interface{}:
+		case []any:
 			// Call recursively for nested slices.
 			newList, err := decryptSecretsInSlice(value, decryptor)
 			if err != nil {
