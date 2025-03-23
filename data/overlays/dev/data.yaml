@@ -1,2 +1,7 @@
 name: Charlie Cartwright
 age: 120
+passwords:
+  - "$$secretName$$"
+network:
+  cidr: "10.0.0.1/16"
+  vpn_password: $$vpn_password$$
