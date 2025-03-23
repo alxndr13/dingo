@@ -6,3 +6,6 @@ build:
 
 run:
 	go run . --logmode human
+
+test:
+	go test -v ./... -cover
