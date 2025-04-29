@@ -2,12 +2,18 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 )
 
 // dummyDecryptor is a simple implementation of the Decryptor interface.
 type dummyDecryptor struct{}
+
+func (d dummyDecryptor) Init() error {
+	fmt.Println("Init dummyDecryptor")
+	return nil
+}
 
 // Decrypt returns "decryptedValue" for any secret name unless
 // the secret name is "error", in which case it returns an error.

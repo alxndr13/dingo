@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"os"
 
 	"github.com/alxndr13/dingo/decrypt"
@@ -20,8 +21,22 @@ var (
 	overlayPath  string
 	templatePath string
 	logMode      string
+	decryptor    string
 	logger       *zap.Logger
 )
+
+func initDecryptor(decryptor string) (Decryptor, error) {
+	switch decryptor {
+	case "example":
+		return decrypt.NewExampleDecryptor(), nil
+
+	case "google":
+		return decrypt.NewGoogleDecryptor(), nil
+
+	}
+	return nil, fmt.Errorf("no such decryptor")
+
+}
 
 func initLogger() error {
 	var err error
@@ -65,6 +80,7 @@ func main() {
 				zap.Error(err)
 				os.Exit(1)
 			}
+
 			mergedData, err := loadAndMergeYAMLFiles(basePath, overlayPath)
 			if err != nil {
 				logger.Error("failed to load YAML files",
@@ -83,14 +99,20 @@ func main() {
 				os.Exit(1)
 			}
 
-			// Decrypt secrets in mergedData
-			decryptor := &decrypt.ExampleDecryptor{}
-			if err := decryptSecrets(&mergedData, decryptor); err != nil {
-				logger.Error("secret decryption failed",
-					zap.Error(err),
-					zap.Any("data", mergedData),
-				)
-				os.Exit(1)
+			if len(decryptor) > 0 {
+				// Decrypt secrets in mergedData
+				decryptor, err := initDecryptor(decryptor)
+				if err != nil {
+					zap.Error(err)
+				}
+				if err := decryptSecrets(&mergedData, decryptor); err != nil {
+					logger.Error("secret decryption failed",
+						zap.Error(err),
+						zap.Any("data", mergedData),
+					)
+					os.Exit(1)
+				}
+
 			}
 
 			logger.Info("data loaded and validated successfully",
@@ -111,35 +133,17 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&overlayPath, "overlaypath", "data/overlays/dev", "Overlay directory for YAML files")
 	rootCmd.PersistentFlags().StringVar(&templatePath, "templatepath", "templates", "Template files to template")
 	rootCmd.PersistentFlags().StringVar(&logMode, "logmode", "human", "Log Mode, available values [human, json]")
+	rootCmd.PersistentFlags().StringVar(&decryptor, "decryptor", "", "Decryptor in case you're using secrets, leave empty if you do not want to use one. available values [example, google]")
 
-	err := viper.BindPFlag("basepath", rootCmd.PersistentFlags().Lookup("basepath"))
-	if err != nil {
-		logger.Fatal("failed to bind flag",
-			zap.Error(err),
-			zap.String("flag", "basepath"),
-		)
-	}
-
-	err = viper.BindPFlag("overlaypath", rootCmd.PersistentFlags().Lookup("overlaypath"))
-	if err != nil {
-		logger.Fatal("failed to bind flag",
-			zap.Error(err),
-			zap.String("flag", "overlaypath"),
-		)
-	}
-	err = viper.BindPFlag("templatepath", rootCmd.PersistentFlags().Lookup("templatepath"))
-	if err != nil {
-		logger.Fatal("failed to bind flag",
-			zap.Error(err),
-			zap.String("flag", "templatepath"),
-		)
-	}
-	err = viper.BindPFlag("logmode", rootCmd.PersistentFlags().Lookup("logmode"))
-	if err != nil {
-		logger.Fatal("failed to bind flag",
-			zap.Error(err),
-			zap.String("flag", "logmode"),
-		)
+	// bindFlags binds command line flags to viper configuration
+	flags := []string{"basepath", "overlaypath", "templatepath", "logmode"}
+	for _, flag := range flags {
+		if err := viper.BindPFlag(flag, rootCmd.PersistentFlags().Lookup(flag)); err != nil {
+			logger.Fatal("failed to bind flag",
+				zap.Error(err),
+				zap.String("flag", flag),
+			)
+		}
 	}
 
 	if err := rootCmd.Execute(); err != nil {

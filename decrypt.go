@@ -5,22 +5,29 @@ import (
 	"strings"
 )
 
+const REGEX_STRING string = `\$\$(.*?)\$\$`
+
 // Decryptor interface for decrypting secrets
 type Decryptor interface {
+	Init() error
 	Decrypt(secretName string) (string, error)
 }
 
 // decryptSecrets recursively decrypts values in a Data map.
 func decryptSecrets(data *Data, decryptor Decryptor) error {
-	secretPattern := regexp.MustCompile(`\$\$(.*?)\$\$`)
+	secretPattern := regexp.MustCompile(REGEX_STRING)
+
 	for k, v := range *data {
 		switch value := v.(type) {
 		case string:
-			// Handle string values.
 			matches := secretPattern.FindAllStringSubmatch(value, -1)
 			newStr := value
 			for _, match := range matches {
 				secretName := match[1]
+				err := decryptor.Init()
+				if err != nil {
+					return err
+				}
 				decryptedValue, err := decryptor.Decrypt(secretName)
 				if err != nil {
 					return err
@@ -35,8 +42,8 @@ func decryptSecrets(data *Data, decryptor Decryptor) error {
 				return err
 			}
 			(*data)[k] = nestedData
-    // used for tests, basically the same as map[string]any
-    case Data:
+		// used for tests, basically the same as map[string]any
+		case Data:
 			// Process nested maps of the custom Data type.
 			if err := decryptSecrets(&value, decryptor); err != nil {
 				return err
@@ -56,7 +63,7 @@ func decryptSecrets(data *Data, decryptor Decryptor) error {
 
 // decryptSecretsInSlice recursively processes entries in a slice.
 func decryptSecretsInSlice(list []any, decryptor Decryptor) ([]any, error) {
-	secretPattern := regexp.MustCompile(`\$\$(.*?)\$\$`)
+	secretPattern := regexp.MustCompile(REGEX_STRING)
 	for i, v := range list {
 		switch value := v.(type) {
 		case string:
@@ -64,6 +71,10 @@ func decryptSecretsInSlice(list []any, decryptor Decryptor) ([]any, error) {
 			newStr := value
 			for _, match := range matches {
 				secretName := match[1]
+				err := decryptor.Init()
+				if err != nil {
+					return nil, err
+				}
 				decryptedValue, err := decryptor.Decrypt(secretName)
 				if err != nil {
 					return nil, err
@@ -84,7 +95,6 @@ func decryptSecretsInSlice(list []any, decryptor Decryptor) ([]any, error) {
 			}
 			list[i] = nestedData
 		case []any:
-			// Call recursively for nested slices.
 			newList, err := decryptSecretsInSlice(value, decryptor)
 			if err != nil {
 				return nil, err

@@ -1,0 +1,7 @@
+name: Charlie Cartwright
+age: 120
+passwords:
+  - "$$projects/alxndr13/secrets/test-secret/versions/latest$$"
+network:
+  cidr: "10.0.0.1/16"
+  vpn_password: $$projects/alxndr13/secrets/vpn-password/versions/latest$$
