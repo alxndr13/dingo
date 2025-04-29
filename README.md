@@ -8,7 +8,7 @@ At my last employer, I was introduced to [Kapitan](kapitan.dev), which became th
 
 What I disliked about Kapitan was its Python ecosystem and the hassle of installing it on Docker images or new machines. You always had to ensure the exact Python version, or something would break.
 
-When tasked with building a new foundation for a client, my colleagues and I chose to build on a custom Go library inspired by Kapitan. Since it was just a library, we had to add many features and wrap it in a CLI tool to generate:
+When tasked with building a new foundation for a client, my colleagues and I chose to build on a [custom Go library](https://github.com/lukasjarosch/skipper) inspired by Kapitan (Shoutout to my friend @lukasjarosch here!). Since it was just a library, we had to add many features and wrap it in a CLI tool to generate: 
 
 -  Terraform code
 -  HAProxy configurations
