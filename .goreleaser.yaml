@@ -10,7 +10,6 @@ before:
 builds:
   - id: dingo
     binary: dingo
-    main: ./main.go
     env:
       - CGO_ENABLED=0
     goos:

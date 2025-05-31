@@ -1,3 +1,4 @@
 bin/dingo
 vendor
 output/
+dist
