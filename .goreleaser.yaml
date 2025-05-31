@@ -1,0 +1,115 @@
+version: 2
+
+project_name: dingo
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: dingo
+    binary: dingo
+    main: ./main.go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: default
+    builds:
+      - dingo
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE*
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "merge conflict"
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: Bug fixes
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: alxndr13
+    name: dingo
+  draft: false
+  prerelease: auto
+  name_template: "{{.ProjectName}} v{{.Version}}"
+  header: |
+    ## What's Changed
+  footer: |
+    **Full Changelog**: https://github.com/alxndr13/dingo/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+brews:
+  - name: dingo
+    ids:
+      - default
+    repository:
+      owner: alxndr13
+      name: homebrew-tap
+      branch: main
+    folder: Formula
+    homepage: https://github.com/alxndr13/dingo
+    description: "Infrastructure as Data templating CLI inspired by Kapitan"
+    license: MIT
+    test: |
+      system "#{bin}/dingo --help"
+    install: |
+      bin.install "dingo"
+
+dockers:
+  - image_templates:
+      - "ghcr.io/alxndr13/dingo:{{ .Tag }}"
+      - "ghcr.io/alxndr13/dingo:v{{ .Major }}"
+      - "ghcr.io/alxndr13/dingo:v{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/alxndr13/dingo:latest"
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - --platform=linux/amd64
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.description=Infrastructure as Data templating CLI
+      - --label=org.opencontainers.image.url=https://github.com/alxndr13/dingo
+      - --label=org.opencontainers.image.source=https://github.com/alxndr13/dingo
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=MIT
