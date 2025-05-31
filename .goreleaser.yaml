@@ -85,7 +85,7 @@ dockers:
       - "ghcr.io/alxndr13/dingo:v{{ .Major }}"
       - "ghcr.io/alxndr13/dingo:v{{ .Major }}.{{ .Minor }}"
       - "ghcr.io/alxndr13/dingo:latest"
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.goreleaser
     build_flag_templates:
       - --platform=linux/amd64
       - --label=org.opencontainers.image.title={{ .ProjectName }}
