@@ -79,23 +79,6 @@ release:
   footer: |
     **Full Changelog**: https://github.com/alxndr13/dingo/compare/{{ .PreviousTag }}...{{ .Tag }}
 
-brews:
-  - name: dingo
-    ids:
-      - default
-    repository:
-      owner: alxndr13
-      name: homebrew-tap
-      branch: main
-    folder: Formula
-    homepage: https://github.com/alxndr13/dingo
-    description: "Infrastructure as Data templating CLI inspired by Kapitan"
-    license: MIT
-    test: |
-      system "#{bin}/dingo --help"
-    install: |
-      bin.install "dingo"
-
 dockers:
   - image_templates:
       - "ghcr.io/alxndr13/dingo:{{ .Tag }}"
