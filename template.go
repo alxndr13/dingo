@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
+	"text/template"
+
+	"github.com/Masterminds/sprig/v3"
 )
 
 func templateFiles(templateDir, outputDir string, data Data) error {
@@ -44,8 +46,8 @@ func templateFiles(templateDir, outputDir string, data Data) error {
 			return fmt.Errorf("failed to read template file %s: %w", path, err)
 		}
 
-		// Parse and execute the template.
-		tmpl, err := template.New(info.Name()).Parse(string(content))
+		// Parse and execute the template with sprig functions.
+		tmpl, err := template.New(info.Name()).Funcs(sprig.FuncMap()).Parse(string(content))
 		if err != nil {
 			return fmt.Errorf("failed to parse template %s: %w", path, err)
 		}
